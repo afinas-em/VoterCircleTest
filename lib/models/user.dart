@@ -1,6 +1,6 @@
 class UserModel {
   String name;
-  String image;
+  String image = '';
   int id =-1;
 
   UserModel({this.id, this.name, this.image});

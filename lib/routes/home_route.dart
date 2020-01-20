@@ -46,6 +46,17 @@ class _HomeRouteState extends State<HomeRoute> {
             children: <Widget>[
               Row(
                 children: <Widget>[
+                  if (_user.image.isNotEmpty)
+                    Container(
+                      height: 35.0,
+                      width: 35.0,
+                      margin: EdgeInsets.only(right: 20),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        image:
+                            DecorationImage(image: NetworkImage(_user.image)),
+                      ),
+                    ),
                   Expanded(
                       child: Text(
                     'Logged in as : ${_user?.name ?? '-'}',
@@ -81,6 +92,16 @@ class _HomeRouteState extends State<HomeRoute> {
                       width: 16,
                       child: CircularProgressIndicator(),
                     ),
+                  Spacer(),
+                  IconButton(
+                    icon: Icon(
+                      Icons.sync,
+                      color: Colors.black,
+                    ),
+                    onPressed: () {
+                      loadComments(false);
+                    },
+                  )
                 ],
               ),
               SizedBox(height: 16),
@@ -104,7 +125,7 @@ class _HomeRouteState extends State<HomeRoute> {
 
                         return FlatButton(
                           child: Text(_noMoreData
-                              ? 'You have reached the bottom'
+                              ? 'You have reached at the bottom'
                               : 'Load more'),
                           onPressed: () {
                             if (_noMoreData) return;
@@ -146,7 +167,11 @@ class _HomeRouteState extends State<HomeRoute> {
                               color: _isLoggedIn ? primaryColor : Colors.grey,
                             ),
                             onPressed: () async {
-                              if (!_isLoggedIn) return;
+                              if (!_isLoggedIn) {
+                                Fluttertoast.showToast(msg: 'Login required');
+                                return;
+                              }
+
                               if (_addingComment) return;
 
                               _comment = _comment.trim();
@@ -186,6 +211,7 @@ class _HomeRouteState extends State<HomeRoute> {
                               _scrollController.jumpTo(0);
                               setState(() {
                                 _addingComment = false;
+                                _noMoreData = false;
                               });
                             },
                           )
@@ -218,6 +244,10 @@ class _HomeRouteState extends State<HomeRoute> {
 
     QuerySnapshot snapShot;
     if (!isPagination) {
+      setState(() {
+        _noMoreData = false;
+      });
+
       snapShot = await Firestore.instance
           .collection('comments')
           .limit(5)

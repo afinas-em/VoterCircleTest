@@ -65,6 +65,10 @@ class _LoginRouteState extends State<LoginRoute> {
                               ),
                               MaterialButton(
                                 onPressed: () {
+
+                                  _username = _username.trim();
+                                  _password = _password.trim();
+
                                   if (_username.isEmpty || _password.isEmpty) {
                                     Scaffold.of(context).showSnackBar(SnackBar(
                                         content: Text('Invalid credentials')));

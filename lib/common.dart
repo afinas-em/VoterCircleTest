@@ -71,8 +71,7 @@ class CommentView extends StatelessWidget {
   CommentView(this._comment, {this.modelChanged, this.currentUser});
 
   @override
-  Widget build(BuildContext context) =>
-      Container(
+  Widget build(BuildContext context) => Container(
         color: Colors.white,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -130,7 +129,7 @@ class CommentView extends StatelessWidget {
                     likeClicked: () {
                       if (currentUser.id == -1) {
                         Scaffold.of(context).showSnackBar(
-                            SnackBar(content: Text('Login to contoinue')));
+                            SnackBar(content: Text('Login required')));
                         return;
                       }
 
@@ -192,23 +191,22 @@ class CommentView extends StatelessWidget {
                     onPressed: () {
                       if (currentUser.id == -1) {
                         Scaffold.of(context).showSnackBar(
-                            SnackBar(content: Text('Login to contoinue')));
+                            SnackBar(content: Text('Login to required')));
                         return;
                       }
 
                       showReplyAlert(context,
                           path: _comment.path,
                           user: currentUser, replySuccess: (replies) async {
-                            _comment.replies = replies;
-                            _comment.reply_count += 1;
-                            modelChanged(_comment);
+                        _comment.replies = replies;
+                        _comment.reply_count += 1;
+                        modelChanged(_comment);
 
-                            final DocumentReference document =
+                        final DocumentReference document =
                             Firestore.instance.document(_comment.path);
-                            await document
-                                .updateData(
-                                {'reply_count': _comment.reply_count});
-                          });
+                        await document
+                            .updateData({'reply_count': _comment.reply_count});
+                      });
                     },
                   ),
                 ],
@@ -219,16 +217,15 @@ class CommentView extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: _comment.replies
-                    .map((model) =>
-                    CommentView(
-                      model,
-                      modelChanged: (changedModel) {
-                        int index = _comment.replies.indexOf(model);
-                        _comment.replies[index] = changedModel;
-                        modelChanged(_comment);
-                      },
-                      currentUser: currentUser,
-                    ))
+                    .map((model) => CommentView(
+                          model,
+                          modelChanged: (changedModel) {
+                            int index = _comment.replies.indexOf(model);
+                            _comment.replies[index] = changedModel;
+                            modelChanged(_comment);
+                          },
+                          currentUser: currentUser,
+                        ))
                     .toList(),
               ),
             )
@@ -238,8 +235,8 @@ class CommentView extends StatelessWidget {
 
   Future<void> showReplyAlert(context,
       {String path,
-        Function(List<CommentModel> replies) replySuccess,
-        UserModel user}) {
+      Function(List<CommentModel> replies) replySuccess,
+      UserModel user}) {
     String _comment = '';
     bool _isPosting = false;
 
@@ -268,68 +265,70 @@ class CommentView extends StatelessWidget {
                           },
                         ),
                       ),
-                      _isPosting?
-                       Container(
-                         margin: EdgeInsets.only(right: 10,left: 5),
-                           height: 25,
-                           width: 25,
-                           child: CircularProgressIndicator())
-                      :IconButton(
-                        icon: Icon(
-                          Icons.send,
-                          color: primaryColor,
-                        ),
-                        onPressed: () async {
-                          _comment = _comment.trim();
-                          if (_comment.isEmpty) {
-                            Fluttertoast.showToast(msg: 'Enter comment');
-                            return;
-                          }
+                      _isPosting
+                          ? Container(
+                              margin: EdgeInsets.only(right: 10, left: 5),
+                              height: 25,
+                              width: 25,
+                              child: CircularProgressIndicator())
+                          : IconButton(
+                              icon: Icon(
+                                Icons.send,
+                                color: primaryColor,
+                              ),
+                              onPressed: () async {
+                                _comment = _comment.trim();
+                                if (_comment.isEmpty) {
+                                  Fluttertoast.showToast(msg: 'Enter comment');
+                                  return;
+                                }
 
-                          if (_isPosting) return;
+                                if (_isPosting) return;
 
-                          setState(() {
-                            _isPosting = true;
-                          });
+                                setState(() {
+                                  _isPosting = true;
+                                });
 
-                          CommentModel newComment = CommentModel()
-                            ..comment = _comment
-                            ..date_time = DateTime
-                                .now()
-                                .millisecondsSinceEpoch
-                            ..image = user.image
-                            ..like_ids = []
-                            ..reply_count = 0
-                            ..like_status = false
-                            ..replies = []
-                            ..name = user.name;
+                                CommentModel newComment = CommentModel()
+                                  ..comment = _comment
+                                  ..date_time =
+                                      DateTime.now().millisecondsSinceEpoch
+                                  ..image = user.image
+                                  ..like_ids = []
+                                  ..reply_count = 0
+                                  ..like_status = false
+                                  ..replies = []
+                                  ..name = user.name;
 
-                          FocusScope.of(context).requestFocus(FocusNode());
+                                FocusScope.of(context)
+                                    .requestFocus(FocusNode());
 
-                          final CollectionReference commentsRef =
-                          Firestore.instance.collection('$path/replies');
-                          DocumentReference document =
-                          await commentsRef.add(newComment.toJson());
-                          newComment.path = document.path;
+                                final CollectionReference commentsRef =
+                                    Firestore.instance
+                                        .collection('$path/replies');
+                                DocumentReference document =
+                                    await commentsRef.add(newComment.toJson());
+                                newComment.path = document.path;
 
-                          var query = await Firestore.instance
-                              .collection('$path/replies')
-                              .orderBy('date_time', descending: false)
-                              .getDocuments();
+                                var query = await Firestore.instance
+                                    .collection('$path/replies')
+                                    .orderBy('date_time', descending: false)
+                                    .getDocuments();
 
-                          final List<CommentModel> tmpReplies = [];
-                          for (DocumentSnapshot snapshot in query.documents)
-                            tmpReplies.add(CommentModel.map(snapshot,
-                                userId: currentUser.id,
-                                path: snapshot.reference.path));
+                                final List<CommentModel> tmpReplies = [];
+                                for (DocumentSnapshot snapshot
+                                    in query.documents)
+                                  tmpReplies.add(CommentModel.map(snapshot,
+                                      userId: currentUser.id,
+                                      path: snapshot.reference.path));
 
-                          Navigator.of(context).pop();
-                          replySuccess(tmpReplies);
-                          setState(() {
-                            _isPosting = false;
-                          });
-                        },
-                      )
+                                Navigator.of(context).pop();
+                                replySuccess(tmpReplies);
+                                setState(() {
+                                  _isPosting = false;
+                                });
+                              },
+                            )
                     ],
                   ),
                 ),
